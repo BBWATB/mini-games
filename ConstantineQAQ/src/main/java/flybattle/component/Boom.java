@@ -9,7 +9,7 @@ public class Boom {
     private int y;
     private int width;
     private int height;
-    private ImageIcon boomimg = new ImageIcon("resources/bomb.png");
+    private ImageIcon boomimg = new ImageIcon("ConstantineQAQ/resources/bomb.png");
     private int count;//删除的次数
 
     public int getCount() {

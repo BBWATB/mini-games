@@ -8,7 +8,7 @@ public class Bullet3 {
     private int y;
     private int width;
     private int height;
-    private ImageIcon bulletImageIcon = new ImageIcon("resources/bullet.png");
+    private ImageIcon bulletImageIcon = new ImageIcon("ConstantineQAQ/resources/bullet.png");
 
     public Bullet3(int x, int y) {
         this.x = x;

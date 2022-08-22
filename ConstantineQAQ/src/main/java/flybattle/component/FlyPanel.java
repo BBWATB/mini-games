@@ -10,7 +10,7 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
 
 
     //读取英雄机的图片
-    ImageIcon heroImage = new ImageIcon("resources/nts.png");
+    ImageIcon heroImage = new ImageIcon("ConstantineQAQ/resources/nts.png");
 
     //定义一个集合来装所有的敌机
     ArrayList<Enemy> enemys = new ArrayList();

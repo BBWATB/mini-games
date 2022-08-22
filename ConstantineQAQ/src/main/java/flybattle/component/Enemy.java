@@ -13,7 +13,7 @@ public class Enemy {
     private int y;
 
     //杰斯顿的图片
-    private ImageIcon enemyImageIcon = new ImageIcon("resources/jsd.png");
+    private ImageIcon enemyImageIcon = new ImageIcon("ConstantineQAQ/resources/jsd.png");
 
     public Enemy() {
         this.width = enemyImageIcon.getIconWidth();
