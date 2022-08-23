@@ -25,12 +25,14 @@ public class FlyMain {
         //设置窗口居中
         jFrame.setLocationRelativeTo(null);
 
+        //设置不可调整大小
+        jFrame.setResizable(false);
+
         //创建JPanel容器
         FlyPanel flyPanel = new FlyPanel();
 
         //将容器加入到JFrame中
         jFrame.add(flyPanel);
-
 
         //添加鼠标监听器
         jFrame.addMouseMotionListener(flyPanel);

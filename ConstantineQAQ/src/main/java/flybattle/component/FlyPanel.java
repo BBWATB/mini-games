@@ -12,6 +12,9 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
     //读取英雄机的图片
     ImageIcon heroImage = new ImageIcon("ConstantineQAQ/resources/nts.png");
 
+    //读取蓝门的图片
+    ImageIcon blueImage = new ImageIcon("ConstantineQAQ/resources/blue.png");
+
     //定义一个集合来装所有的敌机
     ArrayList<Enemy> enemys = new ArrayList();
 
@@ -34,11 +37,11 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
 
     public FlyPanel() {
         //创建10个敌人
-        if(level == 1) {
+        if (level == 1) {
             for (int i = 0; i < 10; i++) {
                 enemys.add(new Enemy());
             }
-        }else if(level == 2){
+        } else if (level == 2) {
             for (int i = 0; i < 30; i++) {
                 enemys.add(new Enemy());
             }
@@ -121,6 +124,11 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
             //1.绘制主机
             g.drawImage(heroImage.getImage(), planeX, planeY, null);
 
+            //2.绘制蓝门
+            for (int i = 0; i < 10; i++) {
+                g.drawImage(blueImage.getImage(),0+60*i,697,null);
+            }
+
 
             //2.绘制敌机
             for (int i = 0; i < enemys.size(); i++) {
@@ -201,12 +209,12 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
                 Enemy enemy = enemys.get(i);
                 if (level == 1) {
                     enemy.move();//改变敌机的y值
-                }else if(level == 2){
+                } else if (level == 2) {
                     enemy.move2();
                 }
 
-                //判断敌机的y值是否大于整个窗口的高度
-                if (enemy.getY() > 800) {
+                //判断敌机的y值是否大于蓝门的高度
+                if (enemy.getY() > 691) {
                     //删除敌机
                     enemys.remove(enemy);
                     hp--;
@@ -331,6 +339,11 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
                 level = 2;
             }
 
+            //生命值为0时结束游戏
+            if (hp == 0) {
+                isOver = true;
+            }
+
 
             try {
                 Thread.sleep(5);
@@ -338,9 +351,7 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
                 e.printStackTrace();
             }
 
-            if (hp == 0) {
-                isOver = true;
-            }
+
 
             repaint();
         }
