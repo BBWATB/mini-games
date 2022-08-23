@@ -15,6 +15,9 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
     //读取蓝门的图片
     ImageIcon blueImage = new ImageIcon("ConstantineQAQ/resources/blue.png");
 
+    //读取背景图片
+    ImageIcon backgroundImage = new ImageIcon("ConstantineQAQ/resources/background.png");
+
     //定义一个集合来装所有的敌机
     ArrayList<Enemy> enemys = new ArrayList();
 
@@ -116,7 +119,11 @@ public class FlyPanel extends JPanel implements MouseMotionListener {
             g.drawString("游戏结束!", 250, 400);
         } else {
 
-            g.setFont(new Font("", Color.RED.getRed(), 30));
+            //绘制背景图
+            g.drawImage(backgroundImage.getImage(), 0,0,null);
+
+            g.setColor(Color.PINK);
+            g.setFont(new Font("", Color.RED.getRed(), 20));
             g.drawString("得分" + number, 20, 30);
             g.drawString("生命值" + hp, 20, 60);
             g.drawString("等级" + level, 20, 90);
