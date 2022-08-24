@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <easyx.h>
 #include <time.h>
+#include <string>
 
 constexpr auto block_w = 60; // 砖块宽度
 constexpr auto block_h = 30; // 高度
@@ -9,7 +10,7 @@ constexpr auto num_w = 10;   // 横向数量;
 constexpr auto num_h = 10;   // 纵向数量;
 
 int flag_1 = 0; // 发射标志
-float decide = 3; // 碰撞范围追加
+float decide = 4; // 碰撞范围追加
 int arr[num_h][num_w];
 
 
@@ -60,10 +61,12 @@ void Board(ExMessage* msg, Ball& ball) //球板函数
     }
     setfillcolor(BLUE);
     fillrectangle(site, block_h * num_h + 400, site + 100, block_h * num_h + 410);
-    if (ball.x <= site + 100 + ball.r &&
+    if (
+        ball.x <= site + 100 + ball.r &&
         ball.x >= site - ball.r &&
         ball.y <= block_h * num_h + 410 &&
-        ball.y >= block_h * num_h + 400 - ball.r && flag_1)
+        ball.y >= block_h * num_h + 400 - ball.r && flag_1
+        )
     {
         ball.speed_y *= -1;
         if (ball.speed_y > 2)
@@ -111,48 +114,155 @@ void Check_edge(Ball& ball) //窗口边缘碰撞检测
 
 void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
 {
-    arr[y][x]--;
+    int str = 0;
     if (
-        (ball.x <= block_w * (x + 1) - space + ball.r &&
-            ball.x >= block_w * (x + 1) - space + ball.r - decide &&
-            ball.y <= block_h * (y + 1) - space - decide &&
-            ball.y >= block_h * y + decide) // 右侧
-        ||
-        (ball.x >= block_w * x - ball.r &&
-            ball.x <= block_w * x - ball.r + decide &&
-            ball.y <= block_h * (y + 1) - space - decide &&
-            ball.y >= block_h * y + decide) // 左侧
-        )
+        ball.x <= block_w * (x + 1) - space + ball.r &&
+        ball.x >= block_w * (x + 1) - space + ball.r - decide &&
+        ball.y <= block_h * (y + 1) - space &&
+        ball.y >= block_h * y
+        ) // 右侧
     {
-        ball.speed_x *= -1;
+        str = 7;
     }
     else if (
-        (ball.y <= block_h * (y + 1) - space + ball.r &&
-            ball.y >= block_h * (y + 1) - space + ball.r - decide &&
-            ball.x <= block_w * (x + 1) - space - decide &&
-            ball.x >= block_w * x + decide) // 底边
-        ||
-        (ball.y >= block_h * y - ball.r &&
-            ball.y <= block_h * y + decide - ball.r &&
-            ball.x <= block_w * (x + 1) - space - decide &&
-            ball.x >= block_w * x + decide) // 顶边
-        )
+        ball.x >= block_w * x - ball.r &&
+        ball.x <= block_w * x - ball.r + decide &&
+        ball.y <= block_h * (y + 1) - space &&
+        ball.y >= block_h * y
+        ) // 左侧
     {
-        ball.speed_y *= -1;
+        str = 2;
     }
-    else
+    else if (
+        ball.y <= block_h * (y + 1) - space + ball.r &&
+        ball.y >= block_h * (y + 1) - space + ball.r - decide &&
+        ball.x <= block_w * (x + 1) - space &&
+        ball.x >= block_w * x
+        ) // 下侧
     {
-        ball.speed_y *= -1;
+        str = 5;
     }
-    //do
-    //{
-    //    ball.y -= ball.speed_y;
-    //    ball.x += ball.speed_x;
-    //} while
-    //    (ball.x <= block_w * (x + 1) - space + ball.r &&
-    //        ball.x >= block_w * x - ball.r &&
-    //        ball.y <= block_h * (y + 1) - space + ball.r &&
-    //        ball.y >= block_h * y - ball.r);
+    else if (
+        ball.y >= block_h * y - ball.r &&
+        ball.y <= block_h * y - ball.r + decide &&
+        ball.x <= block_w * (x + 1) - space &&
+        ball.x >= block_w * x
+        ) // 上侧
+    {
+        str = 4;
+    }
+    else if (
+        ball.x >= block_w * x - ball.r &&
+        ball.x <= block_w * x &&
+        ball.y >= block_h * y - ball.r &&
+        ball.y <= block_h * y
+        ) //左上
+    {
+        str = 1;
+    }
+    else if (
+        ball.x >= block_w * x - ball.r &&
+        ball.x <= block_w * x &&
+        ball.y <= block_h * (y + 1) - space + ball.r &&
+        ball.y >= block_h * (y + 1) - space
+        ) //左下
+    {
+        str = 3;
+    }
+    else if (
+        ball.x <= block_w * (x + 1) - space + ball.r &&
+        ball.x >= block_w * (x + 1) - space &&
+        ball.y >= block_h * y - ball.r &&
+        ball.y <= block_h * y
+        ) //右上
+    {
+        str = 6;
+    }
+    else if (
+        ball.x <= block_w * (x + 1) - space + ball.r &&
+        ball.x >= block_w * (x + 1) - space &&
+        ball.y <= block_h * (y + 1) - space + ball.r &&
+        ball.y >= block_h * (y + 1) - space
+        ) //右下
+    {
+        str = 8;
+    }
+
+    switch (str) {
+    case 1: // 左上
+        if (ball.speed_x >= 0 && ball.speed_y < 0)
+        {
+            ball.speed_x *= -1;
+            ball.speed_y *= -1;
+        }
+        else if (ball.speed_x >= 0 && ball.speed_y > 0)
+        {
+            ball.speed_x *= -1;
+        }
+        else if (ball.speed_x <= 0 && ball.speed_y < 0)
+        {
+            ball.speed_y *= -1;
+        }
+        break;
+    case 2: // 左
+        ball.speed_x *= -1;
+        break;
+    case 3: // 左下
+        if (ball.speed_x >= 0 && ball.speed_y > 0)
+        {
+            ball.speed_x *= -1;
+            ball.speed_y *= -1;
+        }
+        else if (ball.speed_x >= 0 && ball.speed_y < 0)
+        {
+            ball.speed_x *= -1;
+        }
+        else if (ball.speed_x <= 0 && ball.speed_y > 0)
+        {
+            ball.speed_y *= -1;
+        }
+        break;
+    case 4: // 上
+        ball.speed_y *= -1;
+        break;
+    case 5: // 下
+        ball.speed_y *= -1;
+        break;
+    case 6: // 右上
+        if (ball.speed_x <= 0 && ball.speed_y < 0)
+        {
+            ball.speed_x *= -1;
+            ball.speed_y *= -1;
+        }
+        else if (ball.speed_x <= 0 && ball.speed_y > 0)
+        {
+            ball.speed_x *= -1;
+        }
+        else if (ball.speed_x >= 0 && ball.speed_y < 0)
+        {
+            ball.speed_y *= -1;
+        }
+        break;
+    case 7: // 右
+        ball.speed_x *= -1;
+        break;
+    case 8: // 右下
+        if (ball.speed_x <= 0 && ball.speed_y > 0)
+        {
+            ball.speed_x *= -1;
+            ball.speed_y *= -1;
+        }
+        else if (ball.speed_x <= 0 && ball.speed_y < 0)
+        {
+            ball.speed_x *= -1;
+        }
+        else if (ball.speed_x >= 0 && ball.speed_y > 0)
+        {
+            ball.speed_y *= -1;
+        }
+        break;
+    }
+    --arr[y][x];
 }
 
 void Crash(Ball& ball) //碰撞函数
@@ -164,10 +274,10 @@ void Crash(Ball& ball) //碰撞函数
         {
             // 检测砖块碰撞
             if (arr[y][x] &&
-                (ball.x <= block_w * (x + 1) - space + ball.r &&
-                    ball.x >= block_w * x - ball.r &&
-                    ball.y <= block_h * (y + 1) - space + ball.r &&
-                    ball.y >= block_h * y - ball.r))
+                ball.x <= block_w * (x + 1) - space + ball.r &&
+                ball.x >= block_w * x - ball.r &&
+                ball.y <= block_h * (y + 1) - space + ball.r &&
+                ball.y >= block_h * y - ball.r)
             {
                 Check_crash(x, y, ball);
                 return;
@@ -258,7 +368,7 @@ void Draw_the_blocks() // 绘制砖块
     }
 }
 
-int Game_state(Ball& ball) //判断小球是否都掉落，若全部掉落则游戏失败
+int Game_state(Ball& ball) //判断小球是否掉落
 {
     int x = 0, y = 0;
     if (ball.y >= block_h * num_h + 500)
@@ -283,7 +393,7 @@ int main()
     srand((unsigned int)time(NULL));
     int play = 1;
     ExMessage msg;
-    Ball ball = { 300, 450, 10, 1, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
+    Ball ball = { 300, 450, 10, 0, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
     initgraph(block_w * num_w, block_h * num_h + 500, EW_SHOWCONSOLE); // 初始化窗口
     while (true)
     {
