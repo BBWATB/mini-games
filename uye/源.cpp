@@ -14,6 +14,7 @@ int flag_2 = 0; // 第一次弹射标志
 float decide = 4; // 碰撞范围追加
 int arr[num_h][num_w];
 
+
 typedef struct Ball //定义小球参数 坐标 半径 速度
 {
 	int x;
@@ -23,6 +24,11 @@ typedef struct Ball //定义小球参数 坐标 半径 速度
 	int speed_y;
 	COLORREF ball_color;
 } Ball;
+
+void Ball_move(Ball& ball);
+void Board(ExMessage* msg, Ball& ball);
+void Check_board(int* site, Ball* ball);
+void Check_edge(Ball* ball);
 
 void Ball_move(Ball& ball) //小球移动函数
 {
@@ -58,7 +64,48 @@ void Board(ExMessage* msg, Ball& ball) //球板函数
 		ball.y <= block_h * num_h + 410 &&
 		ball.y >= block_h * num_h + 400 - ball.r && flag_2)
 	{
-		//Check_board(&site, &ball);
+		Check_board(&site, &ball);
+	}
+}
+
+void Check_board(int* site, Ball* ball) //检测板子碰撞函数
+{
+	if (ball->x <= *site + 100 + ball->r && ball->x >= *site + 90 && ball->y >= block_h * num_h + 400 - ball->r) //碰到板子右角
+	{
+		ball->speed_x *= -1;
+		ball->speed_y *= -1;
+	}
+	else if (ball->x >= *site - ball->r && ball->x <= *site + 10 && ball->y >= block_h * num_h + 400 - ball->r) //碰到板子左角
+	{
+		ball->speed_x *= -1;
+		ball->speed_y *= -1;
+	}
+	else
+	{
+		if (ball->y >= block_h * num_h + 400) //碰到板子顶边
+		{
+			ball->speed_y *= -1;
+			ball->speed_x += -1 + rand() % 2;
+		}
+	}
+}
+
+void Check_edge(Ball* ball) //窗口边缘碰撞检测
+{
+	if (ball->x <= ball->r)
+	{
+		ball->speed_x *= -1;
+		ball->x = ball->r + 1;
+	}
+	else if (ball->x >= block_w * num_w - ball->r)
+	{
+		ball->speed_x *= -1;
+		ball->x = block_w * num_w - ball->r - 1;
+	}
+	else if (ball->y <= ball->r)
+	{
+		ball->speed_y *= -1;
+		ball->y = ball->r + 1;
 	}
 }
 
@@ -79,6 +126,8 @@ int main()
 
 		Board(&msg, ball);
 		Ball_move(ball);
+
+		Check_edge(&ball);
 
 		EndBatchDraw();
 	}
