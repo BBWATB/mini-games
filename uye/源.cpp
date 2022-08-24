@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <easyx.h>
 #include <time.h>
-#include <string>
 
 constexpr auto block_w = 60; // 砖块宽度
 constexpr auto block_h = 30; // 高度
@@ -10,7 +9,7 @@ constexpr auto num_w = 10;   // 横向数量;
 constexpr auto num_h = 10;   // 纵向数量;
 
 int flag_1 = 0; // 发射标志
-float decide = 4; // 碰撞范围追加
+int decide = 4; // 碰撞范围
 int arr[num_h][num_w];
 
 
@@ -69,11 +68,7 @@ void Board(ExMessage* msg, Ball& ball) //球板函数
         )
     {
         ball.speed_y *= -1;
-        if (ball.speed_y > 2)
-        {
-            ball.speed_y += -1 + rand() % 3;
-        }
-        if (rand() % 4 < 2)
+        if (rand() % 2)
         {
             if (abs(ball.speed_x) < 2)
             {
@@ -158,7 +153,10 @@ void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
         ball.y <= block_h * y
         ) //左上
     {
-        str = 1;
+        if (arr[y][x - 1])
+            str = 4;
+        else
+            str = 1;
     }
     else if (
         ball.x >= block_w * x - ball.r &&
@@ -167,7 +165,10 @@ void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
         ball.y >= block_h * (y + 1) - space
         ) //左下
     {
-        str = 3;
+        if (arr[y][x - 1])
+            str = 5;
+        else
+            str = 3;
     }
     else if (
         ball.x <= block_w * (x + 1) - space + ball.r &&
@@ -176,7 +177,10 @@ void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
         ball.y <= block_h * y
         ) //右上
     {
-        str = 6;
+        if (arr[y][x + 1])
+            str = 4;
+        else
+            str = 6;
     }
     else if (
         ball.x <= block_w * (x + 1) - space + ball.r &&
@@ -185,7 +189,10 @@ void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
         ball.y >= block_h * (y + 1) - space
         ) //右下
     {
-        str = 8;
+        if (arr[y][x + 1])
+            str = 5;
+        else
+            str = 8;
     }
 
     switch (str) {
@@ -421,11 +428,17 @@ int main()
             Sleep(1);
         }
         if (play == 2) {
-            outtextxy(num_w * block_w / 2 - 20, 350, L"you win");
+            outtextxy(num_w * block_w / 2 - 30, 350, L"you win");
         }
-        else
+        else if (play == 0)
         {
-            outtextxy(num_w * block_w / 2 - 20, 350, L"you lost");
+            outtextxy(num_w * block_w / 2 - 30, 350, L"you lost");
+        }
+        outtextxy(num_w * block_w / 2 - 120, 400, L"Press the Right button to restart the game");
+        if (GetAsyncKeyState(VK_RBUTTON))
+        {
+            play = 1;
+            flag_1 = 0;
         }
     }
     return 0;
