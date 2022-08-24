@@ -393,7 +393,7 @@ int main()
     srand((unsigned int)time(NULL));
     int play = 1;
     ExMessage msg;
-    Ball ball = { 300, 450, 10, 0, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
+    Ball ball = { 300, 450, 10, -1 + rand() % 3, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
     initgraph(block_w * num_w, block_h * num_h + 500, EW_SHOWCONSOLE); // 初始化窗口
     while (true)
     {
