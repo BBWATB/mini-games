@@ -112,42 +112,47 @@ void Check_edge(Ball& ball) //窗口边缘碰撞检测
 void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
 {
     arr[y][x]--;
-    if (ball.x <= block_w * (x + 1) - space + ball.r &&
-        ball.x >= block_w * (x + 1) - space + ball.r - decide &&
-        ball.y <= block_h * (y + 1) - space - decide &&
-        ball.y >= block_h * y + decide) // 右侧
+    if (
+        (ball.x <= block_w * (x + 1) - space + ball.r &&
+            ball.x >= block_w * (x + 1) - space + ball.r - decide &&
+            ball.y <= block_h * (y + 1) - space - decide &&
+            ball.y >= block_h * y + decide) // 右侧
+        ||
+        (ball.x >= block_w * x - ball.r &&
+            ball.x <= block_w * x - ball.r + decide &&
+            ball.y <= block_h * (y + 1) - space - decide &&
+            ball.y >= block_h * y + decide) // 左侧
+        )
     {
         ball.speed_x *= -1;
     }
-    else if (ball.x >= block_w * x - ball.r &&
-        ball.x <= block_w * x - ball.r + decide &&
-        ball.y <= block_h * (y + 1) - space - decide &&
-        ball.y >= block_h * y + decide) // 左侧
-    {
-        ball.speed_x *= -1;
-    }
-    else
-    {
-        if (ball.y <= block_h * (y + 1) - space + ball.r &&
+    else if (
+        (ball.y <= block_h * (y + 1) - space + ball.r &&
             ball.y >= block_h * (y + 1) - space + ball.r - decide &&
             ball.x <= block_w * (x + 1) - space - decide &&
             ball.x >= block_w * x + decide) // 底边
-        {
-            ball.speed_y *= -1;
-        }
-        else if (ball.y >= block_h * y - ball.r &&
+        ||
+        (ball.y >= block_h * y - ball.r &&
             ball.y <= block_h * y + decide - ball.r &&
             ball.x <= block_w * (x + 1) - space - decide &&
             ball.x >= block_w * x + decide) // 顶边
-        {
-            ball.speed_y *= -1;
-        }
-        else
-        {
-            ball.speed_y *= -1;
-        }
+        )
+    {
+        ball.speed_y *= -1;
     }
-    ball.x += -5 + rand() % 10;
+    else
+    {
+        ball.speed_y *= -1;
+    }
+    //do
+    //{
+    //    ball.y -= ball.speed_y;
+    //    ball.x += ball.speed_x;
+    //} while
+    //    (ball.x <= block_w * (x + 1) - space + ball.r &&
+    //        ball.x >= block_w * x - ball.r &&
+    //        ball.y <= block_h * (y + 1) - space + ball.r &&
+    //        ball.y >= block_h * y - ball.r);
 }
 
 void Crash(Ball& ball) //碰撞函数
@@ -165,6 +170,7 @@ void Crash(Ball& ball) //碰撞函数
                     ball.y >= block_h * y - ball.r))
             {
                 Check_crash(x, y, ball);
+                return;
             }
             // 检测窗口碰撞
             else
@@ -277,7 +283,7 @@ int main()
     srand((unsigned int)time(NULL));
     int play = 1;
     ExMessage msg;
-    Ball ball = { 300, 450, 10, -1 + rand() % 3, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
+    Ball ball = { 300, 450, 10, 1, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
     initgraph(block_w * num_w, block_h * num_h + 500, EW_SHOWCONSOLE); // 初始化窗口
     while (true)
     {
