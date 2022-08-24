@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <easyx.h>
 #include <time.h>
+#include <string>
 
 constexpr auto block_w = 60; // 砖块宽度
 constexpr auto block_h = 30; // 高度
@@ -10,8 +11,8 @@ constexpr auto num_h = 10;   // 纵向数量;
 
 int flag_1 = 0; // 发射标志
 int decide = 4; // 碰撞范围
+int score = 0;
 int arr[num_h][num_w];
-
 
 typedef struct Ball //定义小球参数 坐标 半径 速度
 {
@@ -30,6 +31,7 @@ void Check_crash(int& x, int& y, Ball& ball);
 void Crash(Ball& ball);
 void Dreate_blocks();
 void Draw_the_blocks();
+void Dynamic_center(const wchar_t* text, int y, int width);
 
 void Ball_move(Ball& ball) //小球移动函数
 {
@@ -270,6 +272,7 @@ void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
         break;
     }
     --arr[y][x];
+    ++score;
 }
 
 void Crash(Ball& ball) //碰撞函数
@@ -395,6 +398,11 @@ int Game_state(Ball& ball) //判断小球是否掉落
     return 2;
 }
 
+void Dynamic_center(const wchar_t* text, int y, int width)
+{
+    outtextxy(width / 2 - textwidth(text) / 2, y, text);
+}
+
 int main()
 {
     srand((unsigned int)time(NULL));
@@ -406,6 +414,7 @@ int main()
     {
         if (play == 1)
         {
+            score = 0;
             Dreate_blocks();
             COLORREF ball_color = RGB(rand() % 256, rand() % 256, rand() % 256);
             ball.ball_color = ball_color;
@@ -421,20 +430,24 @@ int main()
             Draw_the_blocks();
             Board(&msg, ball); // 绘制板子
             Crash(ball);       // 碰撞检测
-            Ball_move(ball);   // 移动小球
 
+            wchar_t buf[11] = L"score: ";
+            _itow_s(score, buf + 7, 10, 10);
+            outtextxy(num_w * block_w / 2 - 35, 300, buf);
+
+            Ball_move(ball);   // 移动小球
             EndBatchDraw();
 
             Sleep(1);
         }
         if (play == 2) {
-            outtextxy(num_w * block_w / 2 - 30, 350, L"you win");
+            Dynamic_center(L"you win", 350, num_w * block_w);
         }
         else if (play == 0)
         {
-            outtextxy(num_w * block_w / 2 - 30, 350, L"you lost");
+            Dynamic_center(L"you lost", 350, num_w * block_w);
         }
-        outtextxy(num_w * block_w / 2 - 120, 400, L"Press the Right button to restart the game");
+        Dynamic_center(L"Press the Right button to restart the game", 400, num_w * block_w);
         if (GetAsyncKeyState(VK_RBUTTON))
         {
             play = 1;
