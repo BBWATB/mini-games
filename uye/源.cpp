@@ -2,18 +2,19 @@
 #include <easyx.h>
 #include <time.h>
 
-constexpr auto block_w = 60; // 砖块宽度
-constexpr auto block_h = 30; // 高度
-constexpr auto space = 2;    // 间距
-constexpr auto num_w = 10;   // 横向数量;
-constexpr auto num_h = 10;   // 纵向数量;
+constexpr auto block_w = 60;  // 砖块宽度
+constexpr auto block_h = 30;  // 砖块高度
+constexpr auto space = 2;     // 砖块间距
+constexpr auto num_w = 10;    // 砖块横向数量
+constexpr auto num_h = 10;    // 砖块纵向数量
+constexpr auto board_w = 100; // 球板宽度
+constexpr auto board_h = 10;  // 球板高度
 
-int flag_1 = 0; // 发射标志
-int decide = 4; // 碰撞范围
+int game_start = 0; // 游戏开始标志
 int score = 0;
 int arr[num_h][num_w];
 
-typedef struct Ball //定义小球参数 坐标 半径 速度
+typedef struct Ball // 定义小球参数 坐标 半径 速度 颜色
 {
     int x = 0;
     int y = 0;
@@ -33,9 +34,9 @@ void Draw_the_blocks();
 int Game_state(Ball& ball);
 void Dynamic_center(const wchar_t* text, int y, int width);
 
-void Ball_move(Ball& ball) //小球移动函数
+void Ball_move(Ball& ball) // 小球移动函数
 {
-    if (flag_1)
+    if (game_start)
     {
         ball.y -= ball.speed_y;
         ball.x += ball.speed_x;
@@ -44,46 +45,49 @@ void Ball_move(Ball& ball) //小球移动函数
     fillcircle(ball.x, ball.y, ball.r);
 }
 
-void Board(ExMessage* msg, Ball& ball) //球板函数
+void Board(ExMessage* msg, Ball& ball) // 球板函数
 {
-    static int site = block_w * num_w + 50;
+    static int site = block_w * num_w + board_w / 2;
     static int last_site = site;
     if (peekmessage(msg, EM_MOUSE))
     {
-        site = msg->x - 50; //球板位置
+        site = msg->x - board_w / 2; // 球板位置
         if (msg->lbutton)
         {
-            flag_1 = 1;
+            game_start = 1;
         }
     }
     setfillcolor(BLUE);
-    fillrectangle(site, block_h * num_h + 400, site + 100, block_h * num_h + 410);
-    if (!flag_1) //若没有按下左键，则球的位置跟随球板位置
+    fillrectangle(site, block_h * num_h + 400, site + board_w, block_h * num_h + 400 + board_h); // 绘制球板
+    if (!game_start)                                                                             // 若游戏没有开始，则球的位置跟随球板位置
     {
-        ball.x = site + 50;
+        ball.x = site + board_w / 2;
     }
     else if (
-        ball.x <= site + 100 + ball.r &&
+        ball.x <= site + board_w + ball.r &&
         ball.x >= site - ball.r &&
-        ball.y <= block_h * num_h + 410 &&
-        ball.y >= block_h * num_h + 400 - ball.r
-        )
+        ball.y <= block_h * num_h + 400 + board_h &&
+        ball.y >= block_h * num_h + 400 - ball.r)
     {
         ball.speed_y *= -1;
-        if (last_site - site < 0 && ball.speed_x < 4)
+        score += abs(ball.speed_x);
+        if (rand() % 3 < 2)
         {
-            ball.speed_x += rand() % 2;
+            if (last_site - site < 0 && ball.speed_x < 4)
+            {
+                ++ball.speed_x;
+            }
+            else if (last_site - site > 0 && ball.speed_x > -4)
+            {
+                --ball.speed_x;
+            }
         }
-        else if (last_site - site > 0 && ball.speed_x > -4)
-        {
-            ball.speed_x -= rand() % 2;
-        }
-        ball.y = block_h * num_h + 400 - ball.r - 1;
+        ball.y = block_h * num_h + 400 - ball.r - 1; // 防止卡板子
     }
     last_site = site;
 }
 
-void Check_edge(Ball& ball) //窗口边缘碰撞检测
+void Check_edge(Ball& ball) // 窗口边缘碰撞检测
 {
     if (ball.x <= ball.r)
     {
@@ -102,173 +106,109 @@ void Check_edge(Ball& ball) //窗口边缘碰撞检测
     }
 }
 
-void Check_crash(int& x, int& y, Ball& ball) //检测碰撞位置函数
+void Check_crash(int& x, int& y, Ball& ball) // 检测碰撞位置函数
 {
-    int str = 0;
-    if (
-        ball.x <= block_w * (x + 1) - space + ball.r &&
-        ball.x >= block_w * (x + 1) - space + ball.r - decide &&
-        ball.y <= block_h * (y + 1) - space &&
-        ball.y >= block_h * y
-        ) // 右侧
+    bool is_ball_out_of_left_range = ball.x >= block_w * x - ball.r && ball.x <= block_w * x;
+    bool is_ball_out_of_right_range = ball.x <= block_w * (x + 1) - space + ball.r && ball.x >= block_w * (x + 1) - space;
+    bool is_ball_out_of_top_range = ball.y >= block_h * y - ball.r && ball.y <= block_h * y;
+    bool is_ball_out_of_bottom_range = ball.y <= block_h * (y + 1) - space + ball.r && ball.y >= block_h * (y + 1) - space;
+
+    if (is_ball_out_of_left_range) // 左
     {
-        str = 7;
+        ball.x = block_w * x - ball.r - 1;
     }
-    else if (
-        ball.x >= block_w * x - ball.r &&
-        ball.x <= block_w * x - ball.r + decide &&
-        ball.y <= block_h * (y + 1) - space &&
-        ball.y >= block_h * y
-        ) // 左侧
+    else if (is_ball_out_of_right_range) // 右
     {
-        str = 2;
-    }
-    else if (
-        ball.y <= block_h * (y + 1) - space + ball.r &&
-        ball.y >= block_h * (y + 1) - space + ball.r - decide &&
-        ball.x <= block_w * (x + 1) - space &&
-        ball.x >= block_w * x
-        ) // 下侧
-    {
-        str = 5;
-    }
-    else if (
-        ball.y >= block_h * y - ball.r &&
-        ball.y <= block_h * y - ball.r + decide &&
-        ball.x <= block_w * (x + 1) - space &&
-        ball.x >= block_w * x
-        ) // 上侧
-    {
-        str = 4;
-    }
-    else if (
-        ball.x >= block_w * x - ball.r &&
-        ball.x <= block_w * x &&
-        ball.y >= block_h * y - ball.r &&
-        ball.y <= block_h * y
-        ) //左上
-    {
-        if (arr[y][x - 1])
-            str = 4;
-        else
-            str = 1;
-    }
-    else if (
-        ball.x >= block_w * x - ball.r &&
-        ball.x <= block_w * x &&
-        ball.y <= block_h * (y + 1) - space + ball.r &&
-        ball.y >= block_h * (y + 1) - space
-        ) //左下
-    {
-        if (arr[y][x - 1])
-            str = 5;
-        else
-            str = 3;
-    }
-    else if (
-        ball.x <= block_w * (x + 1) - space + ball.r &&
-        ball.x >= block_w * (x + 1) - space &&
-        ball.y >= block_h * y - ball.r &&
-        ball.y <= block_h * y
-        ) //右上
-    {
-        if (arr[y][x + 1])
-            str = 4;
-        else
-            str = 6;
-    }
-    else if (
-        ball.x <= block_w * (x + 1) - space + ball.r &&
-        ball.x >= block_w * (x + 1) - space &&
-        ball.y <= block_h * (y + 1) - space + ball.r &&
-        ball.y >= block_h * (y + 1) - space
-        ) //右下
-    {
-        if (arr[y][x + 1])
-            str = 5;
-        else
-            str = 8;
+        ball.x = block_w * (x + 1) - space + ball.r + 1;
     }
 
-    switch (str) {
-    case 1: // 左上
+    if (is_ball_out_of_top_range) // 上
+    {
+        ball.y = block_h * y - ball.r - 1;
+    }
+    else if (is_ball_out_of_bottom_range) // 下
+    {
+        ball.y = block_h * (y + 1) - space + ball.r + 1;
+    }
+
+    if (is_ball_out_of_left_range && is_ball_out_of_top_range) // 左上
+    {
         if (ball.speed_x >= 0 && ball.speed_y < 0)
         {
-            ball.speed_x *= -1;
+            ball.speed_x = -ball.speed_x - (abs(ball.speed_x) > 3 ? 0 : 1);
             ball.speed_y *= -1;
         }
-        else if (ball.speed_x >= 0 && ball.speed_y > 0)
-        {
-            ball.speed_x *= -1;
-        }
-        else if (ball.speed_x <= 0 && ball.speed_y < 0)
+        else if (ball.speed_x < 0)
         {
             ball.speed_y *= -1;
         }
-        break;
-    case 2: // 左
-        ball.speed_x *= -1;
-        break;
-    case 3: // 左下
+        else
+        {
+            ball.speed_x *= -1;
+        }
+    }
+    else if (is_ball_out_of_left_range && is_ball_out_of_bottom_range) // 左下
+    {
         if (ball.speed_x >= 0 && ball.speed_y > 0)
         {
-            ball.speed_x *= -1;
+            ball.speed_x = -ball.speed_x - (abs(ball.speed_x) > 3 ? 0 : 1);
             ball.speed_y *= -1;
         }
-        else if (ball.speed_x >= 0 && ball.speed_y < 0)
-        {
-            ball.speed_x *= -1;
-        }
-        else if (ball.speed_x <= 0 && ball.speed_y > 0)
+        else if (ball.speed_x < 0)
         {
             ball.speed_y *= -1;
         }
-        break;
-    case 4: // 上
-        ball.speed_y *= -1;
-        break;
-    case 5: // 下
-        ball.speed_y *= -1;
-        break;
-    case 6: // 右上
+        else
+        {
+            ball.speed_x *= -1;
+        }
+    }
+    else if (is_ball_out_of_right_range && is_ball_out_of_top_range) // 右上
+    {
         if (ball.speed_x <= 0 && ball.speed_y < 0)
         {
-            ball.speed_x *= -1;
+            ball.speed_x = -ball.speed_x + (abs(ball.speed_x) > 3 ? 0 : 1);
             ball.speed_y *= -1;
         }
-        else if (ball.speed_x <= 0 && ball.speed_y > 0)
-        {
-            ball.speed_x *= -1;
-        }
-        else if (ball.speed_x >= 0 && ball.speed_y < 0)
+        else if (ball.speed_x > 0)
         {
             ball.speed_y *= -1;
         }
-        break;
-    case 7: // 右
-        ball.speed_x *= -1;
-        break;
-    case 8: // 右下
+        else
+        {
+            ball.speed_x *= -1;
+        }
+    }
+    else if (is_ball_out_of_right_range && is_ball_out_of_bottom_range) // 右下
+    {
         if (ball.speed_x <= 0 && ball.speed_y > 0)
         {
-            ball.speed_x *= -1;
+            ball.speed_x = -ball.speed_x + (abs(ball.speed_x) > 3 ? 0 : 1);
             ball.speed_y *= -1;
         }
-        else if (ball.speed_x <= 0 && ball.speed_y < 0)
-        {
-            ball.speed_x *= -1;
-        }
-        else if (ball.speed_x >= 0 && ball.speed_y > 0)
+        else if (ball.speed_x > 0)
         {
             ball.speed_y *= -1;
         }
-        break;
+        else
+        {
+            ball.speed_x *= -1;
+        }
     }
+    else if (is_ball_out_of_left_range || is_ball_out_of_right_range) // 左右
+    {
+        ball.speed_x *= -1;
+    }
+    else if (is_ball_out_of_top_range || is_ball_out_of_bottom_range) // 上下
+    {
+        ball.speed_y *= -1;
+    }
+
     --arr[y][x];
     ++score;
 }
 
-void Crash(Ball& ball) //碰撞函数
+void Crash(Ball& ball) // 碰撞函数
 {
     int x = 0, y = 0, i = 0;
     for (y = 0; y < num_h; y++)
@@ -290,12 +230,11 @@ void Crash(Ball& ball) //碰撞函数
             {
                 Check_edge(ball);
             }
-
         }
     }
 }
 
-void Dreate_blocks()
+void Dreate_blocks() // 创造砖块
 {
     int x = 0, y = 0;
     int i, j;
@@ -369,7 +308,7 @@ void Draw_the_blocks() // 绘制砖块
     }
 }
 
-int Game_state(Ball& ball) //判断小球是否掉落
+int Game_state(Ball& ball) // 判断小球是否掉落
 {
     int x, y;
     if (ball.y >= block_h * num_h + 500)
@@ -399,7 +338,7 @@ void Dynamic_center(const wchar_t* text, int y, int width)
 int main()
 {
     int play = 1;
-    wchar_t buf[11] = L"score: ";
+    wchar_t buf[20] = L"score: ";
     ExMessage msg;
     Ball ball;
     srand((unsigned int)time(NULL));
@@ -422,10 +361,10 @@ int main()
             Draw_the_blocks();
             Board(&msg, ball); // 绘制板子
             Crash(ball);       // 碰撞检测
-            _itow_s(score, buf + 7, 10, 10);
+            _itow_s(score, buf + 7, 12, 10);
             Dynamic_center(buf, num_h * (block_h + 2), num_w * block_w);
 
-            Ball_move(ball);   // 移动小球
+            Ball_move(ball); // 移动小球
             EndBatchDraw();
 
             Sleep(1);
@@ -435,10 +374,11 @@ int main()
 
         Dynamic_center(L"Press the Right button to restart the game", num_h * (block_h + 6), num_w * block_w);
 
+        GetAsyncKeyState(VK_RBUTTON); // 忽略游戏时的点击
         while (GetAsyncKeyState(VK_RBUTTON))
         {
             play = 1;
-            flag_1 = 0;
+            game_start = 0;
             Sleep(10);
         }
     }
