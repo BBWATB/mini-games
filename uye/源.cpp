@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <easyx.h>
 #include <time.h>
-#include <string>
 
 constexpr auto block_w = 60; // 砖块宽度
 constexpr auto block_h = 30; // 高度
@@ -16,12 +15,12 @@ int arr[num_h][num_w];
 
 typedef struct Ball //定义小球参数 坐标 半径 速度
 {
-    int x;
-    int y;
-    int r;
-    int speed_x;
-    int speed_y;
-    COLORREF ball_color;
+    int x = 0;
+    int y = 0;
+    int r = 10;
+    int speed_x = 0;
+    int speed_y = 1;
+    COLORREF ball_color = RGB(0, 0, 0);
 } Ball;
 
 void Ball_move(Ball& ball);
@@ -31,6 +30,7 @@ void Check_crash(int& x, int& y, Ball& ball);
 void Crash(Ball& ball);
 void Dreate_blocks();
 void Draw_the_blocks();
+int Game_state(Ball& ball);
 void Dynamic_center(const wchar_t* text, int y, int width);
 
 void Ball_move(Ball& ball) //小球移动函数
@@ -47,6 +47,7 @@ void Ball_move(Ball& ball) //小球移动函数
 void Board(ExMessage* msg, Ball& ball) //球板函数
 {
     static int site = block_w * num_w + 50;
+    static int last_site = site;
     if (peekmessage(msg, EM_MOUSE))
     {
         site = msg->x - 50; //球板位置
@@ -55,39 +56,31 @@ void Board(ExMessage* msg, Ball& ball) //球板函数
             flag_1 = 1;
         }
     }
+    setfillcolor(BLUE);
+    fillrectangle(site, block_h * num_h + 400, site + 100, block_h * num_h + 410);
     if (!flag_1) //若没有按下左键，则球的位置跟随球板位置
     {
         ball.x = site + 50;
-        ball.y = block_h * num_h + 380;
     }
-    setfillcolor(BLUE);
-    fillrectangle(site, block_h * num_h + 400, site + 100, block_h * num_h + 410);
-    if (
+    else if (
         ball.x <= site + 100 + ball.r &&
         ball.x >= site - ball.r &&
         ball.y <= block_h * num_h + 410 &&
-        ball.y >= block_h * num_h + 400 - ball.r && flag_1
+        ball.y >= block_h * num_h + 400 - ball.r
         )
     {
         ball.speed_y *= -1;
-        if (rand() % 2)
+        if (last_site - site < 0 && ball.speed_x < 4)
         {
-            if (abs(ball.speed_x) < 2)
-            {
-                ball.speed_x += -1 + rand() % 3;
-            }
-            else if (ball.speed_x >= 2)
-            {
-                ball.speed_x -= rand() % 2;
-            }
-            else if (ball.speed_x <= -2)
-            {
-                ball.speed_x += rand() % 2;
-            }
+            ball.speed_x += rand() % 2;
         }
-        ball.x += -5 + rand() % 10;
-        ball.y -= ball.r;
+        else if (last_site - site > 0 && ball.speed_x > -4)
+        {
+            ball.speed_x -= rand() % 2;
+        }
+        ball.y = block_h * num_h + 400 - ball.r - 1;
     }
+    last_site = site;
 }
 
 void Check_edge(Ball& ball) //窗口边缘碰撞检测
@@ -305,6 +298,10 @@ void Crash(Ball& ball) //碰撞函数
 void Dreate_blocks()
 {
     int x = 0, y = 0;
+    int i, j;
+    int empty = 20;
+    int blood_three = 15;
+    int blood_two = 30;
     for (x = 0; x < num_w; x++)
     {
         for (y = 0; y < num_h; y++)
@@ -312,37 +309,35 @@ void Dreate_blocks()
             arr[y][x] = 1;
         }
     }
-    int empty = 20;
-    int blood_three = 15;
-    int blood_two = 30;
+
     while (blood_two)
     {
-        int i = rand() % num_w;
-        int j = rand() % num_h;
+        i = rand() % num_w;
+        j = rand() % num_h;
         if (arr[j][i] == 1)
         {
             arr[j][i] = 2;
-            blood_two--;
+            --blood_two;
         }
     }
     while (blood_three)
     {
-        int i = rand() % num_w;
-        int j = rand() % num_h;
+        i = rand() % num_w;
+        j = rand() % num_h;
         if (arr[j][i] == 1)
         {
             arr[j][i] = 3;
-            blood_three--;
+            --blood_three;
         }
     }
     while (empty)
     {
-        int i = rand() % num_w;
-        int j = rand() % num_h;
+        i = rand() % num_w;
+        j = rand() % num_h;
         if (arr[j][i] == 1)
         {
             arr[j][i] = 0;
-            empty--;
+            --empty;
         }
     }
 }
@@ -368,10 +363,6 @@ void Draw_the_blocks() // 绘制砖块
                 {
                     setfillcolor(RGB(50, 50, 50));
                 }
-                else
-                {
-                    setfillcolor(RGB(255, 0, 0));
-                }
                 solidrectangle(block_w * x, block_h * y, block_w * (x + 1) - space, block_h * (y + 1) - space);
             }
         }
@@ -380,9 +371,10 @@ void Draw_the_blocks() // 绘制砖块
 
 int Game_state(Ball& ball) //判断小球是否掉落
 {
-    int x = 0, y = 0;
+    int x, y;
     if (ball.y >= block_h * num_h + 500)
     {
+        Dynamic_center(L"you lost", num_h * (block_h + 4), num_w * block_w);
         return 0;
     }
     for (x = 0; x < num_h; x++)
@@ -395,6 +387,7 @@ int Game_state(Ball& ball) //判断小球是否掉落
             }
         }
     }
+    Dynamic_center(L"you win", num_h * (block_h + 4), num_w * block_w);
     return 2;
 }
 
@@ -405,10 +398,11 @@ void Dynamic_center(const wchar_t* text, int y, int width)
 
 int main()
 {
-    srand((unsigned int)time(NULL));
     int play = 1;
+    wchar_t buf[11] = L"score: ";
     ExMessage msg;
-    Ball ball = { 300, 450, 10, -1 + rand() % 3, 1 ,RGB(0, 0, 0) }; // 初始化小球 坐标 半径 速度 颜色
+    Ball ball;
+    srand((unsigned int)time(NULL));
     initgraph(block_w * num_w, block_h * num_h + 500, EW_SHOWCONSOLE); // 初始化窗口
     while (true)
     {
@@ -416,42 +410,36 @@ int main()
         {
             score = 0;
             Dreate_blocks();
-            COLORREF ball_color = RGB(rand() % 256, rand() % 256, rand() % 256);
-            ball.ball_color = ball_color;
+            ball = { 0, block_h * num_h + 350, 10, 0, 1, RGB(rand() % 256, rand() % 256, rand() % 256) };
+            setbkcolor(RGB(150, 150, 200)); // 背景
         }
+
         while (play == 1)
         {
-            play = Game_state(ball);
-
             BeginBatchDraw();
-            setbkcolor(RGB(150, 150, 200)); // 背景
             cleardevice();
 
             Draw_the_blocks();
             Board(&msg, ball); // 绘制板子
             Crash(ball);       // 碰撞检测
-
-            wchar_t buf[11] = L"score: ";
             _itow_s(score, buf + 7, 10, 10);
-            outtextxy(num_w * block_w / 2 - 35, 300, buf);
+            Dynamic_center(buf, num_h * (block_h + 2), num_w * block_w);
 
             Ball_move(ball);   // 移动小球
             EndBatchDraw();
 
             Sleep(1);
+
+            play = Game_state(ball);
         }
-        if (play == 2) {
-            Dynamic_center(L"you win", 350, num_w * block_w);
-        }
-        else if (play == 0)
-        {
-            Dynamic_center(L"you lost", 350, num_w * block_w);
-        }
-        Dynamic_center(L"Press the Right button to restart the game", 400, num_w * block_w);
-        if (GetAsyncKeyState(VK_RBUTTON))
+
+        Dynamic_center(L"Press the Right button to restart the game", num_h * (block_h + 6), num_w * block_w);
+
+        while (GetAsyncKeyState(VK_RBUTTON))
         {
             play = 1;
             flag_1 = 0;
+            Sleep(10);
         }
     }
     return 0;
