@@ -7,7 +7,7 @@ constexpr auto block_h = 30;  // 砖块高度
 constexpr auto space = 2;     // 砖块间距
 constexpr auto num_w = 10;    // 砖块横向数量
 constexpr auto num_h = 10;    // 砖块纵向数量
-constexpr auto board_w = 100; // 球板宽度
+constexpr auto board_w = block_w * num_w / 3; // 球板宽度
 constexpr auto board_h = 10;  // 球板高度
 
 int game_start = 0; // 游戏开始标志
